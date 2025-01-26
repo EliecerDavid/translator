@@ -2,9 +2,10 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\Attributes\DataProvider;
+use Illuminate\Support\Facades\Config;
 use Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\Helpers\ApiLayerHelper as TestHelper;
 
 class TranslationTest extends TestCase
 {
@@ -20,32 +21,60 @@ class TranslationTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public static function wordsProvider(): array
-    {
-        return [
-            ['es', 'animal', 'animal'],
-            ['es', 'dog', 'perro'],
-            ['es', 'cat', 'gato'],
-
-            ['fr', 'animal', 'animal'],
-            ['fr', 'dog', 'chien'],
-            ['fr', 'cat', 'chat'],
-        ];
-    }
-
     #[Test]
-    #[DataProvider('wordsProvider')]
-    public function it_translates_a_text(string $locale, string $text, string $translatedText): void
+    public function it_translates_a_text_with_config_illuminate(): void
     {
+        Config::set(key: 'translator.default', value: 'illuminate');
+
         $body = [
-            'locale' => $locale,
-            'text' => $text,
+            'locale' => 'es',
+            'text' => 'cat',
         ];
 
         $response = $this->post('/translation', $body);
         $response->assertJson([
             'data' => [
-                'translated_text' => $translatedText,
+                'translated_text' => 'gato',
+            ],
+        ]);
+    }
+
+    #[Test]
+    public function it_translates_a_text_with_config_apilayer(): void
+    {
+        TestHelper::setUpHttpFakeWithAValidResponse('gato');
+
+        Config::set(key: 'translator.default', value: 'apilayer');
+        Config::set(key: 'translator.providers.apilayer.apikey', value: 'apilayer');
+
+        $body = [
+            'locale' => 'es',
+            'text' => 'cat',
+        ];
+
+        $response = $this->post('/translation', $body);
+        $response->assertJson([
+            'data' => [
+                'translated_text' => 'gato',
+            ],
+        ]);
+    }
+
+    #[Test]
+    public function it_translates_a_text_with_config_unsupported_provider(): void
+    {
+        Config::set(key: 'translator.default', value: 'apilayer');
+        Config::set(key: 'translator.providers.apilayer.provider', value: 'unsupported');
+
+        $body = [
+            'locale' => 'es',
+            'text' => 'cat',
+        ];
+
+        $response = $this->post('/translation', $body);
+        $response->assertJson([
+            'data' => [
+                'message' => 'unsupported provider',
             ],
         ]);
     }

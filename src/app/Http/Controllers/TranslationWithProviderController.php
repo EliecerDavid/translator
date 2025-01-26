@@ -6,10 +6,7 @@ use App\Services\Translator\Exceptions\UnsupportedProviderException;
 use App\Services\Translator\Providers\ApiLayerProvider;
 use App\Services\Translator\Providers\IlluminateProvider;
 use App\Services\Translator\Translator;
-use GuzzleHttp\Client as HttpClient;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 
 class TranslationWithProviderController extends Controller
 {
@@ -23,13 +20,8 @@ class TranslationWithProviderController extends Controller
         $locale = $request->input('locale');
         $text = $request->input('text');
 
-        try {
-            $provider = $this->initializeProvider($providerName);
-        } catch (UnsupportedProviderException $e) {
-            return new JsonResponse(status: 404);
-        }
-
-        $translator = new Translator($provider);
+        $provider = $this->initializeProvider(providerName: $providerName);
+        $translator = new Translator(provider: $provider);
 
         return [
             'data' => [
@@ -45,19 +37,19 @@ class TranslationWithProviderController extends Controller
         } elseif ($providerName == 'apilayer') {
             return $this->initializeApiLayerProvider();
         } else {
-            throw new UnsupportedProviderException(code: 404);
+            throw new UnsupportedProviderException();
         }
     }
 
     protected function initializeIlluminateProvider(): IlluminateProvider
     {
         $illuminateTranslator = app('translator');
-        return new IlluminateProvider($illuminateTranslator);
+        return new IlluminateProvider(translator: $illuminateTranslator);
     }
 
     protected function initializeApiLayerProvider(): ApiLayerProvider
     {
         $apiKey = env('TRANSLATOR_APILAYER_APIKEY');
-        return new ApiLayerProvider($apiKey);
+        return new ApiLayerProvider(apiKey: $apiKey);
     }
 }
