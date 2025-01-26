@@ -6,6 +6,7 @@ use App\Services\Translator\Providers\ApiLayerProvider;
 use Illuminate\Support\Facades\Http;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\Helpers\ApiLayerHelper as TestHelper;
 use Tests\TestCase;
 
 class ApiLayerProviderTest extends TestCase
@@ -22,7 +23,7 @@ class ApiLayerProviderTest extends TestCase
     #[DataProvider('wordsProvider')]
     public function it_returns_a_translated_text($locale, $text, $translatedText): void
     {
-        $this->setValidResponseForHttpFake(translatedText: $translatedText);
+        TestHelper::setUpHttpFakeWithAValidResponse(translatedText: $translatedText);
 
         $apiKey = 'fakeapikey';
         $provider = new ApiLayerProvider($apiKey);
@@ -33,7 +34,8 @@ class ApiLayerProviderTest extends TestCase
     public function it_return_true_if_text_is_supported(): void
     {
         $text = 'cat';
-        $this->setValidResponseForHttpFake(translatedText: $text);
+        $translatedText = 'gato';
+        TestHelper::setUpHttpFakeWithAValidResponse(translatedText: $translatedText);
 
         $apiKey = 'fakeapikey';
         $provider = new ApiLayerProvider($apiKey);
@@ -43,7 +45,7 @@ class ApiLayerProviderTest extends TestCase
     #[Test]
     public function it_return_false_if_text_is_unsupported(): void
     {
-        $this->setInvalidResponseForHttpFake();
+        TestHelper::setUpHttpFakeWithAnInvalidResponse(statusCode: 404);
 
         $apiKey = 'fakeapikey';
         $provider = new ApiLayerProvider($apiKey);
@@ -56,7 +58,7 @@ class ApiLayerProviderTest extends TestCase
         $text = 'dog';
         $translatedText = 'perro';
 
-        $this->setValidResponseForHttpFake(translatedText: $translatedText);
+        TestHelper::setUpHttpFakeWithAValidResponse(translatedText: $translatedText);
 
         $apiKey = 'fakeapikey';
         $provider = new ApiLayerProvider($apiKey);
@@ -64,29 +66,5 @@ class ApiLayerProviderTest extends TestCase
         $this->assertEquals($translatedText, $provider->get(text: $text, locale: 'es'));
 
         Http::assertSentCount(1);
-    }
-
-    public function setValidResponseForHttpFake(string $translatedText): void
-    {
-        Http::fake([
-            '*' => Http::response(body: [
-                'character_count' => strlen($translatedText),
-                'detected_language' => 'en',
-                'detected_language_confidence' => 1,
-                'translations' => [
-                    ['translation' => $translatedText],
-                ],
-                'word_count' => 1,
-            ], status: 200),
-        ]);
-    }
-
-    public function setInvalidResponseForHttpFake(): void
-    {
-        Http::fake([
-            '*' => Http::response(body: [
-                'message' => 'It has an error.',
-            ], status: 404),
-        ]);
     }
 }

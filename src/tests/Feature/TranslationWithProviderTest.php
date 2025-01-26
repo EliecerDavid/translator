@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\Helpers\ApiLayerHelper as TestHelper;
 
 class TranslationWithProviderTest extends TestCase
 {
@@ -30,17 +30,7 @@ class TranslationWithProviderTest extends TestCase
     #[Test]
     public function it_translate_a_text_with_apilayer_provider(): void
     {
-        Http::fake([
-            '*' => Http::response(body: [
-                'character_count' => strlen('perro'),
-                'detected_language' => 'en',
-                'detected_language_confidence' => 1,
-                'translations' => [
-                    ['translation' => 'perro'],
-                ],
-                'word_count' => 1,
-            ], status: 200),
-        ]);
+        TestHelper::setUpHttpFakeWithAValidResponse(translatedText: 'perro');
 
         $body = [
             'locale' => 'es',
