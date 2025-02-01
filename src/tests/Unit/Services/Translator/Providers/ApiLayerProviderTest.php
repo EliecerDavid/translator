@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\Service\Translator;
+namespace Tests\Unit\Services\Translator\Providers;
 
 use App\Services\Translator\Providers\ApiLayerProvider;
 use Illuminate\Support\Facades\Http;

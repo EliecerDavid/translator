@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\Service\Translator;
+namespace Tests\Unit\Services\Translator;
 
 use App\Services\Translator\Contracts\Provider;
 use App\Services\Translator\Exceptions\UnsupportedTranslationException;
