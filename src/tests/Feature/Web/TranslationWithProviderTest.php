@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Feature\Web;
 
 use Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
